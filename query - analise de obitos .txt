@@ -1,4 +1,4 @@
-WITH BASE AS (-- Tratamento dos dados inconsistentes
+WITH BASE AS (-- Tratamento dos dados inconsistentes e criação de campos REGIAO E FAIXA ETARIA para análise
   SELECT  
     S.estado AS UF
     ,CASE 
