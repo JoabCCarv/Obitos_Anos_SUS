@@ -1,0 +1,50 @@
+WITH BASE AS (-- Tratamento dos dados inconsistentes
+  SELECT  
+    S.estado AS UF
+    ,CASE 
+      WHEN S.estado = 'SP' OR S.estado = 'MG' OR S.estado = 'RJ' OR S.estado = 'ES' THEN 'SUDESTE' 
+      WHEN S.estado = 'MT' OR S.estado = 'GO' OR S.estado = 'MS' OR S.estado = 'DF' THEN 'CENTRO-OESTE'
+      WHEN S.estado = 'SC' OR S.estado = 'PR' OR S.estado = 'RS' THEN 'SUL'
+      WHEN S.estado = 'AC' OR S.estado = 'AM' OR S.estado = 'RR' OR S.estado = 'RO' OR S.estado = 'PA' OR S.estado = 'AP' OR S.estado = 'TO' THEN 'NORTE'
+      ELSE 'NORDESTE'
+    END REGIAO
+    ,S.CIRCOBITO AS CIRC_OBITO
+    ,CASE
+      WHEN S.idade BETWEEN 0 AND 18 THEN '0 à 18 anos' 
+      WHEN S.idade BETWEEN 19 AND 29 THEN '19 à 29 anos'
+      WHEN S.idade BETWEEN 29 AND 39 THEN '29 à 39 anos'
+      WHEN S.idade BETWEEN 39 AND 49 THEN '39 à 49 anos'
+      WHEN S.idade BETWEEN 49 AND 59 THEN '49 à 59 anos'
+      WHEN S.idade BETWEEN 59 AND 69 THEN '59 à 69 anos'
+      WHEN S.idade BETWEEN 69 AND 79 THEN '69 à 79 anos'
+      WHEN S.idade BETWEEN 79 AND 89 THEN '79 à 89 anos'
+      WHEN S.idade BETWEEN 89 AND 99 THEN '89 à 99 anos'
+      WHEN S.idade > 99 THEN 'Mais de 99 anos'
+      ELSE CAST(S.idade AS STRING)
+    END AS FAIXA_ETARIA
+    ,FORMAT_DATE('%Y',S.DTOBITO) AS ANO_OBITO
+    ,S.SEXO 
+    ,S.RACACOR AS RACA
+    ,S.ESTCIV AS EST_CIV
+    ,S.OCUP AS OCUPACAO
+    ,COUNT(S.DTOBITO) OBITOS_UF
+  FROM `SUS_SAUDE_KAGGLE.SUS_2014_2018` S
+  WHERE S.DTOBITO > S.DTNASC
+  GROUP BY ALL
+)
+
+SELECT 
+  B.UF
+  ,B.REGIAO
+  ,B.ANO_OBITO
+  ,B.SEXO
+  ,B.FAIXA_ETARIA
+  ,B.CIRC_OBITO
+  ,B.EST_CIV
+  ,B.OCUPACAO
+  ,B.OBITOS_UF
+  ,SUM(B.OBITOS_UF) OVER (PARTITION BY REGIAO) OBITOS_REGIAO
+FROM BASE B
+WHERE B.OCUPACAO != '0'
+  AND B.CIRC_OBITO != 'NA'
+ORDER BY 9
